@@ -978,7 +978,7 @@ dtb-$(CONFIG_ARCH_IMX9) += \
 	imx93w-evk.dtb \
 	imx93-11x11-frdm.dtb
 
-dtb-$(CONFIG_TARGET_IMX91_9X9_FLUX) += imx91-9x9-flux.dtb
+dtb-$(CONFIG_TARGET_IMX91_9X9_FLUX) += imx91-9x9-flux-v2.dtb
 dtb-$(CONFIG_TARGET_IMX91_9X9_FLUX_V3) += imx91-9x9-flux-v3.dtb
 
 dtb-$(CONFIG_ARCH_IMXRT) += imxrt1050-evk.dtb \
