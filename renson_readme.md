@@ -4,7 +4,7 @@ This document summarizes Renson-specific board enablement and customization in t
 
 ## Board Support Added by Renson
 
-- Added support for `imx91-9x9-flux`.
+- Added support for `imx91-9x9-flux-v2 `.
 - Added support for `imx91-9x9-flux-v3`.
 - Added/customized support for FRDM-based platforms used by Renson (for example `imx93_frdm` and related boot environment updates).
 
