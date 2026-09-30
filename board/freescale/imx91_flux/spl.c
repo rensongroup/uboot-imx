@@ -52,11 +52,17 @@ void spl_board_init(void)
 }
 
 extern struct dram_timing_info dram_timing_1600mts;
+#ifdef CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+extern struct dram_timing_info dram_timing_alliance;
+#endif
+
 void spl_dram_init(void)
 {
+#ifdef CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+	struct dram_timing_info *ptiming = &dram_timing_alliance;
+#else
 	struct dram_timing_info *ptiming = &dram_timing;
-	if (is_voltage_mode(VOLT_LOW_DRIVE))
-		ptiming = &dram_timing;
+#endif
 
 	printf("DDR: %uMTS\n", ptiming->fsp_msg[0].drate);
 	ddr_init(ptiming);

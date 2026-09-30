@@ -14,5 +14,6 @@ obj-$(CONFIG_TARGET_IMX91_9X9_FLUX_V3) += lpddr4_timing_ecc.o lpddr4_timing_1600
 else
 obj-$(CONFIG_TARGET_IMX91_9X9_FLUX) += lpddr4_timing.o lpddr4_timing_1600mts.o
 obj-$(CONFIG_TARGET_IMX91_9X9_FLUX_V3) += lpddr4_timing.o lpddr4_timing_1600mts.o
+obj-$(CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE) += lpddr4_timing_alliance.o lpddr4_timing_1600mts.o
 endif
 endif

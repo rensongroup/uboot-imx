@@ -140,6 +140,14 @@ config TARGET_IMX91_9X9_FLUX_V3
 	imply BOOTSTD_FULL
 	imply BOOTSTD_BOOTCOMMAND
 
+config TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+	bool "imx91_9x9_recovair_alliance"
+	select OF_BOARD_FIXUP
+	select IMX91
+	select IMX9_LPDDR4X
+	imply BOOTSTD_FULL
+	imply BOOTSTD_BOOTCOMMAND
+
 config TARGET_IMX93_14X14_EVK
 	bool "imx93_14x14_evk"
 	select OF_BOARD_FIXUP
@@ -284,4 +292,3 @@ source "board/freescale/imx94_evk/Kconfig"
 source "board/freescale/imx94_orangebox/Kconfig"
 
 endif
-
