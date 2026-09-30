@@ -5,6 +5,7 @@
 
 #include <command.h>
 #include <cpu_func.h>
+#include <fuse.h>
 #include <hang.h>
 #include <image.h>
 #include <init.h>
@@ -51,19 +52,59 @@ void spl_board_init(void)
 	puts("Normal Boot\n");
 }
 
-extern struct dram_timing_info dram_timing_1600mts;
-#ifdef CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+#define DRAM_SKU_FUSE_BANK	47
+#define DRAM_SKU_FUSE_WORD	0
+#define DRAM_SKU_ALLIANCE		BIT(0)
+
+#ifndef CONFIG_IMX9_DRAM_INLINE_ECC
 extern struct dram_timing_info dram_timing_alliance;
 #endif
 
 void spl_dram_init(void)
 {
-#ifdef CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
-	struct dram_timing_info *ptiming = &dram_timing_alliance;
-#else
 	struct dram_timing_info *ptiming = &dram_timing;
+	u32 sku;
+	int ret;
+
+	ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
+	if (ret) {
+		printf("DDR: failed to sense SKU fuse: %d\n", ret);
+		hang();
+	}
+
+#ifdef CONFIG_TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+	if (!(sku & DRAM_SKU_ALLIANCE)) {
+		puts("DDR: permanently programming Alliance SKU fuse\n");
+		ret = fuse_prog(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD,
+				DRAM_SKU_ALLIANCE);
+		if (ret) {
+			printf("DDR: failed to program SKU fuse: %d\n", ret);
+			hang();
+		}
+
+		ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
+		if (ret) {
+			printf("DDR: failed to verify SKU fuse: %d\n", ret);
+			hang();
+		}
+		if (!(sku & DRAM_SKU_ALLIANCE)) {
+			puts("DDR: Alliance SKU fuse verification failed\n");
+			hang();
+		}
+	}
 #endif
 
+	if (sku & DRAM_SKU_ALLIANCE) {
+#ifdef CONFIG_IMX9_DRAM_INLINE_ECC
+		puts("DDR: Alliance inline ECC timing is not supported\n");
+		hang();
+#else
+		ptiming = &dram_timing_alliance;
+#endif
+	}
+
+	printf("DDR: memory profile: %s\n",
+	       (sku & DRAM_SKU_ALLIANCE) ? "Alliance" : "standard");
 	printf("DDR: %uMTS\n", ptiming->fsp_msg[0].drate);
 	ddr_init(ptiming);
 }
