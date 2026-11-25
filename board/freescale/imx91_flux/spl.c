@@ -63,7 +63,8 @@ extern struct dram_timing_info dram_timing_alliance;
 void spl_dram_init(void)
 {
 	struct dram_timing_info *ptiming = &dram_timing;
-#if !defined(CONFIG_IMX91_DRAM_ALLIANCE) || \
+#if (!defined(CONFIG_IMX91_DRAM_ISSI) && \
+	!defined(CONFIG_IMX91_DRAM_ALLIANCE)) || \
 	defined(CONFIG_IMX91_DRAM_PROGRAM_ALLIANCE_FUSE)
 	u32 sku;
 #endif
@@ -72,6 +73,8 @@ void spl_dram_init(void)
 #ifdef CONFIG_IMX91_DRAM_ALLIANCE
 	ptiming = &dram_timing_alliance;
 	puts("DDR: forced Alliance memory profile\n");
+#elif defined(CONFIG_IMX91_DRAM_ISSI)
+	puts("DDR: forced ISSI memory profile\n");
 #else
 	ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
 	if (ret) {
