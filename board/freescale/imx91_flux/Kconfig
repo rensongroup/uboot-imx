@@ -1,4 +1,4 @@
-if TARGET_IMX91_9X9_FLUX || TARGET_IMX91_9X9_FLUX_V3 || TARGET_IMX91_9X9_RECOVAIR_ALLIANCE
+if TARGET_IMX91_9X9_FLUX
 
 config SYS_BOARD
 	default "imx91_flux"
@@ -8,5 +8,20 @@ config SYS_VENDOR
 
 config SYS_CONFIG_NAME
 	default "imx91_flux"
+
+config IMX91_DRAM_ALLIANCE
+	bool "Force Alliance DRAM timing without checking the SKU fuse"
+	depends on !IMX9_DRAM_INLINE_ECC
+	help
+	  Use Alliance timing without checking the SKU fuse. Enable only for
+	  boards fitted with Alliance DRAM.
+
+config IMX91_DRAM_PROGRAM_ALLIANCE_FUSE
+	bool "Program the Alliance DRAM SKU fuse after DDR initialization"
+	depends on IMX91_DRAM_ALLIANCE
+	select CMD_FUSE
+	help
+	  Permanently program the Alliance DRAM SKU fuse after DDR initialization
+	  succeeds. Enable only in an explicitly intended provisioning image.
 
 endif

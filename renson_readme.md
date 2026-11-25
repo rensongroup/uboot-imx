@@ -5,21 +5,27 @@ This document summarizes Renson-specific board enablement and customization in t
 ## Board Support Added by Renson
 
 - Added support for `imx91-9x9-flux-v2 `.
-- Added support for `imx91-9x9-flux-v3`.
+- Added support for `imx91-9x9-flux`.
 - Added/customized support for FRDM-based platforms used by Renson (for example `imx93_frdm` and related boot environment updates).
 
 ## Flux Family Layout
 
-The `flux` and `flux-v3` boards currently reuse the same board implementation directory:
+Flux and Recovair use the same U-Boot target and board implementation:
 
 - `board/freescale/imx91_flux`
 
-The `flux-v3` board has its own target and board description files:
+Use the Flux defconfig as the shared base. Yocto configuration fragments
+select the product device tree and environment. SPL selects DRAM timing from
+the programmed SKU fuse; an Alliance first-boot fragment selects Alliance
+timing and programs the fuse after DDR initialization:
 
-- Defconfig: `configs/imx91_9x9_flux_v3_defconfig`
-- Kconfig target: `CONFIG_TARGET_IMX91_9X9_FLUX_V3` in `arch/arm/mach-imx/imx9/Kconfig`
-- DTS: `arch/arm/dts/imx91-9x9-flux-v3.dts`
-- DTB registration: `arch/arm/dts/Makefile`
+- Flux: `configs/imx91_9x9_flux_defconfig`
+- Shared target: `CONFIG_TARGET_IMX91_9X9_FLUX`
+- Recovair device tree: `CONFIG_DEFAULT_DEVICE_TREE="imx91-9x9-recovair"` and `CONFIG_DEFAULT_FDT_FILE="imx91-9x9-recovair.dtb"`
+- Shared environment: `board/freescale/imx91_flux/imx91_flux.env`
+- FIT configuration: set `fit_conf` in the manufacturing environment or pass it to `bootm_ren`
+- Alliance timing override: `CONFIG_IMX91_DRAM_ALLIANCE`
+- Optional post-DDR Alliance fuse programming: `CONFIG_IMX91_DRAM_PROGRAM_ALLIANCE_FUSE`
 
 ## FRDM Customizations
 
@@ -30,29 +36,13 @@ Examples:
 - `board/freescale/imx91_flux/imx91_flux.env`
 - `board/freescale/imx93_frdm/imx93_frdm.env`
 
-## DDR Timing Note for Flux V3
-
-At this stage, `imx91-9x9-flux-v3` reuses existing Flux DDR timing objects.
-
-If V3 requires different memory timing, update:
-
-- Timing source files under `board/freescale/imx91_flux/` (for example create V3-specific LPDDR timing files).
-- `board/freescale/imx91_flux/Makefile` to select V3 timing objects for:
-  - `CONFIG_TARGET_IMX91_9X9_FLUX_V3`
-- If needed, board init/SPL logic in `board/freescale/imx91_flux/spl.c` to reference the correct timing structures.
-
-In short, switching memory timing from existing Flux settings to dedicated V3 settings is mainly controlled by the board Makefile object selection and the SPL timing references.
-
 ## Build Quick Start
 
 Use GNU make (`gmake`) on macOS.
 
 - Flux:
   - `gmake imx91_9x9_flux_defconfig`
-  - `gmake -j8`
-
-- Flux V3:
-  - `gmake imx91_9x9_flux_v3_defconfig`
+- Build:
   - `gmake -j8`
 
 ## Environment Note
