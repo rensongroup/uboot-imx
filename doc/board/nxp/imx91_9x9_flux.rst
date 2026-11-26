@@ -11,8 +11,7 @@ tries the Alliance timing. SPL halts if no supported profile matches.
 Inline-ECC builds only include the ISSI profile. SPL does not read or
 program the DRAM SKU fuse.
 
-Yocto fragments select the environment with ``CONFIG_ENV_SOURCE_FILE``
-and the product device tree with ``CONFIG_DEFAULT_DEVICE_TREE`` /
-``CONFIG_DEFAULT_FDT_FILE``. The Recovair DTS is supplied by Yocto. Manufacturing
-sets the FIT configuration through the ``fit_conf`` environment variable or
-the ``bootm_ren`` command argument.
+Both products use the U-Boot control device tree ``imx91-9x9-flux.dts`` and
+the shared ``imx91_flux.env`` environment. Yocto may supply product-specific
+Linux device trees. Manufacturing sets the FIT configuration through the
+``fit_conf`` environment variable or the ``bootm_ren`` command argument.

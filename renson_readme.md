@@ -18,10 +18,10 @@ Both products use `configs/imx91_9x9_renson_defconfig`. SPL tries ISSI timing
 first and checks the LPDDR4 manufacturer ID (MR5). If initialization returns
 an error or MR5 identifies Alliance memory, SPL resets DDRMIX and tries Alliance
 timing. The DRAM SKU fuse is no longer used or programmed. Yocto configuration
-fragments still select the product device tree and environment.
+may still supply product-specific Linux device trees and FIT configurations.
 
 - Shared target: `CONFIG_TARGET_IMX91_9X9_FLUX`
-- Recovair device tree: `CONFIG_DEFAULT_DEVICE_TREE="imx91-9x9-recovair"` and `CONFIG_DEFAULT_FDT_FILE="imx91-9x9-recovair.dtb"`
+- Shared U-Boot device tree: `arch/arm/dts/imx91-9x9-flux.dts`
 - Shared environment: `board/freescale/imx91_flux/imx91_flux.env`
 - FIT configuration: set `fit_conf` in the manufacturing environment or pass it to `bootm_ren`
 
