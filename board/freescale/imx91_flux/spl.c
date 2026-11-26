@@ -102,6 +102,8 @@ void spl_dram_init(void)
 		printf("DDR: initialization failed: %d\n", ret);
 		hang();
 	}
+	// ISSI 	--> DDR: LPDDR4 MR5 manufacturer ID: 0x13, MR6/7 revision: 0x00/0x02, MR8 organization: 0x10
+	// ALLIANCE --> DDR: LPDDR4 MR5 manufacturer ID: 0x1a, MR6/7 revision: 0x00/0x00, MR8 organization: 0x08
 	printf("DDR: LPDDR4 MR5 manufacturer ID: 0x%02x, "
 	       "MR6/7 revision: 0x%02x/0x%02x, MR8 organization: 0x%02x\n",
 	       lpddr4_mr_read(1, 5) & 0xff,
