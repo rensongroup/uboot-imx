@@ -5,7 +5,6 @@
 
 #include <command.h>
 #include <cpu_func.h>
-#include <fuse.h>
 #include <hang.h>
 #include <image.h>
 #include <init.h>
@@ -52,92 +51,79 @@ void spl_board_init(void)
 	puts("Normal Boot\n");
 }
 
-#define DRAM_SKU_FUSE_BANK	47
-#define DRAM_SKU_FUSE_WORD	0
-#define DRAM_SKU_ALLIANCE		BIT(0)
+#define SRC_DDRC_SW_CTRL		(SRC_BASE_ADDR + 0x1020)
 
 #ifndef CONFIG_IMX9_DRAM_INLINE_ECC
 extern struct dram_timing_info dram_timing_alliance;
 #endif
 u32 lpddr4_mr_read(u32 mr_rank, u32 mr_addr);
 
+static const struct {
+	struct dram_timing_info *timing;
+	u32 mr5;
+	const char *name;
+} dram_profiles[] = {
+	{ &dram_timing, 0x13, "ISSI" },
+#ifndef CONFIG_IMX9_DRAM_INLINE_ECC
+	{ &dram_timing_alliance, 0x1a, "Alliance" },
+#endif
+};
+
+static void ddrmix_power_cycle(void)
+{
+	setbits_32(REG_SRC_DPHY_SINGLE_RESET_SW_CTRL, BIT(0));
+	setbits_32(SRC_DDRC_SW_CTRL, BIT(31));
+	udelay(50);
+	clrbits_32(SRC_DDRC_SW_CTRL, BIT(31));
+	setbits_32(SRC_DDRC_SW_CTRL, BIT(0));
+	udelay(10);
+	clrbits_32(SRC_DDRC_SW_CTRL, BIT(0));
+	udelay(10);
+}
+
 void spl_dram_init(void)
 {
-	struct dram_timing_info *ptiming = &dram_timing;
-#if (!defined(CONFIG_IMX91_DRAM_ISSI) && \
-	!defined(CONFIG_IMX91_DRAM_ALLIANCE)) || \
-	defined(CONFIG_IMX91_DRAM_PROGRAM_ALLIANCE_FUSE)
-	u32 sku;
-#endif
-	int ret;
+	unsigned int i;
 
-#ifdef CONFIG_IMX91_DRAM_ALLIANCE
-	ptiming = &dram_timing_alliance;
-	puts("DDR: forced Alliance memory profile\n");
-#elif defined(CONFIG_IMX91_DRAM_ISSI)
-	puts("DDR: forced ISSI memory profile\n");
-#else
-	ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
-	if (ret) {
-		printf("DDR: failed to sense SKU fuse: %d\n", ret);
+	for (i = 0; i < ARRAY_SIZE(dram_profiles); i++) {
+		struct dram_timing_info *timing = dram_profiles[i].timing;
+		u32 mr5;
+		int ret;
+
+		if (i)
+			ddrmix_power_cycle();
+		printf("DDR: trying %s profile at %uMTS\n",
+		       dram_profiles[i].name, timing->fsp_msg[0].drate);
+		ret = ddr_init(timing);
+		if (ret) {
+			printf("DDR: initialization failed: %d\n", ret);
+			continue;
+		}
+
+		mr5 = lpddr4_mr_read(1, 5) & 0xff;
+		if (mr5 == dram_profiles[i].mr5)
+			break;
+
+		printf("DDR: MR5 0x%02x does not match the %s profile\n",
+		       mr5, dram_profiles[i].name);
+		if (i + 1 == ARRAY_SIZE(dram_profiles) ||
+		    mr5 != dram_profiles[i + 1].mr5)
+			hang();
+	}
+
+	if (i == ARRAY_SIZE(dram_profiles)) {
+		puts("DDR: no matching memory profile initialized\n");
 		hang();
 	}
 
-	if (sku & DRAM_SKU_ALLIANCE) {
-#ifdef CONFIG_IMX9_DRAM_INLINE_ECC
-		puts("DDR: Alliance inline ECC timing is not supported\n");
-		hang();
-#else
-		ptiming = &dram_timing_alliance;
-#endif
-		puts("DDR: memory profile: Alliance\n");
-	} else {
-		puts("DDR: memory profile: ISSI\n");
-	}
-#endif
-
-	printf("DDR: %uMTS\n", ptiming->fsp_msg[0].drate);
-	ret = ddr_init(ptiming);
-	if (ret) {
-		printf("DDR: initialization failed: %d\n", ret);
-		hang();
-	}
 	// ISSI 	--> DDR: LPDDR4 MR5 manufacturer ID: 0x13, MR6/7 revision: 0x00/0x02, MR8 organization: 0x10
 	// ALLIANCE --> DDR: LPDDR4 MR5 manufacturer ID: 0x1a, MR6/7 revision: 0x00/0x00, MR8 organization: 0x08
 	printf("DDR: LPDDR4 MR5 manufacturer ID: 0x%02x, "
 	       "MR6/7 revision: 0x%02x/0x%02x, MR8 organization: 0x%02x\n",
-	       lpddr4_mr_read(1, 5) & 0xff,
+	       dram_profiles[i].mr5,
 	       lpddr4_mr_read(1, 6) & 0xff,
 	       lpddr4_mr_read(1, 7) & 0xff,
 	       lpddr4_mr_read(1, 8) & 0xff);
-
-#ifdef CONFIG_IMX91_DRAM_PROGRAM_ALLIANCE_FUSE
-	ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
-	if (ret) {
-		printf("DDR: failed to sense SKU fuse: %d\n", ret);
-		hang();
-	}
-
-	if (!(sku & DRAM_SKU_ALLIANCE)) {
-		puts("DDR: programming Alliance SKU fuse after initialization\n");
-		ret = fuse_prog(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD,
-				DRAM_SKU_ALLIANCE);
-		if (ret) {
-			printf("DDR: failed to program SKU fuse: %d\n", ret);
-			hang();
-		}
-
-		ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
-		if (ret) {
-			printf("DDR: failed to verify SKU fuse: %d\n", ret);
-			hang();
-		}
-		if (!(sku & DRAM_SKU_ALLIANCE)) {
-			puts("DDR: Alliance SKU fuse verification failed\n");
-			hang();
-		}
-	}
-#endif
 }
 
 #if CONFIG_IS_ENABLED(DM_PMIC_PF9453)

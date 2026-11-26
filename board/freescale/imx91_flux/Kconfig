@@ -9,34 +9,4 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
 	default "imx91_flux"
 
-choice
-	prompt "i.MX91 DRAM timing selection"
-	default IMX91_DRAM_FUSE
-
-config IMX91_DRAM_FUSE
-	bool "Select timing from SKU fuse"
-
-config IMX91_DRAM_ISSI
-	bool "Force ISSI DRAM timing without checking the SKU fuse"
-	help
-	  Use ISSI timing without checking the SKU fuse. Intended for supplier
-	  builds where the memory vendor is fixed.
-
-config IMX91_DRAM_ALLIANCE
-	bool "Force Alliance DRAM timing without checking the SKU fuse"
-	depends on !IMX9_DRAM_INLINE_ECC
-	help
-	  Use Alliance timing without checking the SKU fuse. Enable only for
-	  boards fitted with Alliance DRAM.
-
-endchoice
-
-config IMX91_DRAM_PROGRAM_ALLIANCE_FUSE
-	bool "Program the Alliance DRAM SKU fuse after DDR initialization"
-	depends on IMX91_DRAM_ALLIANCE
-	select CMD_FUSE
-	help
-	  Permanently program the Alliance DRAM SKU fuse after DDR initialization
-	  succeeds. Enable only in an explicitly intended provisioning image.
-
 endif
