@@ -59,6 +59,7 @@ void spl_board_init(void)
 #ifndef CONFIG_IMX9_DRAM_INLINE_ECC
 extern struct dram_timing_info dram_timing_alliance;
 #endif
+u32 lpddr4_mr_read(u32 mr_rank, u32 mr_addr);
 
 void spl_dram_init(void)
 {
@@ -101,6 +102,12 @@ void spl_dram_init(void)
 		printf("DDR: initialization failed: %d\n", ret);
 		hang();
 	}
+	printf("DDR: LPDDR4 MR5 manufacturer ID: 0x%02x, "
+	       "MR6/7 revision: 0x%02x/0x%02x, MR8 organization: 0x%02x\n",
+	       lpddr4_mr_read(1, 5) & 0xff,
+	       lpddr4_mr_read(1, 6) & 0xff,
+	       lpddr4_mr_read(1, 7) & 0xff,
+	       lpddr4_mr_read(1, 8) & 0xff);
 
 #ifdef CONFIG_IMX91_DRAM_PROGRAM_ALLIANCE_FUSE
 	ret = fuse_sense(DRAM_SKU_FUSE_BANK, DRAM_SKU_FUSE_WORD, &sku);
