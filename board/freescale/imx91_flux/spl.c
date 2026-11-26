@@ -56,6 +56,7 @@ void spl_board_init(void)
 #ifndef CONFIG_IMX9_DRAM_INLINE_ECC
 extern struct dram_timing_info dram_timing_alliance;
 #endif
+extern struct dram_timing_info dram_timing_test;
 u32 lpddr4_mr_read(u32 mr_rank, u32 mr_addr);
 
 static const struct {
@@ -63,6 +64,7 @@ static const struct {
 	u32 mr5;
 	const char *name;
 } dram_profiles[] = {
+	{ &dram_timing_test, 0, "invalid test" },
 	{ &dram_timing, 0x13, "ISSI" },
 #ifndef CONFIG_IMX9_DRAM_INLINE_ECC
 	{ &dram_timing_alliance, 0x1a, "Alliance" },
