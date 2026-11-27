@@ -46,3 +46,24 @@ Use GNU make (`gmake`) on macOS.
 ## Environment Note
 
 Some host setups require OpenSSL development headers for U-Boot host tools (`openssl/evp.h`).
+
+## Factory network boot (Flux)
+
+`board/freescale/imx91_flux/imx91_flux.env` contains two boot paths, selected
+by `boot_mode` in the stored environment (both `boot_mode` and `mfg_family` are
+on the `CFG_ENV_FLAGS_LIST_STATIC` writeable list in `include/configs/imx91_flux.h`):
+
+| `boot_mode` | Behaviour |
+|---|---|
+| `factory` | `factory_bootcmd`: allowlist `mfg_family` (`flux`), `dhcp`, use `${serverip}` (DHCP next-server/siaddr, as on Sitara, RAM only): `tftpboot ${cntr_addr} ${serverip}:imx/<family>/os_cntr_signed.bin`, authenticate and boot it with `bootm_ren` and `mfg.nfsroot=${serverip}:/imx/<family> rauc.slot=A`. Any failure: wait 10 s and reset; never boot unverified, never fall back to eMMC. |
+| `emmc`, unset, invalid/missing env | normal local A/B boot (`fit_bootcmd` -> `boot.scr`). No network access. |
+
+For testing on a network whose DHCP server does not point next-server at the TFTP/NFS server, set
+`mfg_server_ip=<ip>` in the stored env (e.g. `fw_setenv mfg_server_ip 192.168.1.10`
+or `setenv mfg_server_ip ...; saveenv` in U-Boot); it replaces `serverip`.
+Remove it (`fw_setenv mfg_server_ip`) for production.
+
+The supplier writes `boot_mode=factory`; Renson manufacturing runs
+`fw_setenv boot_mode emmc` after provisioning. Networking (DHCP/TFTP, EQOS,
+TI DP83825 PHY via `CONFIG_PHY_TI_GENERIC`) is enabled in the defconfig and in
+the Yocto `production_boot.cfg` fragment.
