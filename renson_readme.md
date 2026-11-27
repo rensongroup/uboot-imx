@@ -55,7 +55,7 @@ on the `CFG_ENV_FLAGS_LIST_STATIC` writeable list in `include/configs/imx91_flux
 
 | `boot_mode` | Behaviour |
 |---|---|
-| `nfs` | `nfs_bootcmd`: allowlist `device_type` (`flux`), `dhcp`, use `${serverip}` (DHCP next-server/siaddr, as on Sitara, RAM only): `tftpboot ${cntr_addr} ${serverip}:imx/<device_type>/os_cntr_signed.bin` (board-specific FIT), authenticate and boot it with `bootm_ren` and `mfg.nfsroot=${serverip}:/imx/manufacturing mfg.device_type=<device_type> rauc.slot=A` (shared manufacturing root). Any failure: wait 10 s and reset; never boot unverified, never fall back to eMMC. |
+| `nfs` | `nfs_bootcmd`: allowlist `device_type` (`flux`), `dhcp`, use `${serverip}` (DHCP next-server/siaddr, as on Sitara, RAM only): `tftpboot ${cntr_addr} ${serverip}:imx91/os_cntr_signed.bin` (one i.MX91 FIT), authenticate and boot it with `bootm_ren` and `mfg.nfsroot=${serverip}:/imx/manufacturing mfg.device_type=<device_type> rauc.slot=A` (shared manufacturing root). Any failure: wait 10 s and reset; never boot unverified, never fall back to eMMC. |
 | `emmc`, unset, invalid/missing env | normal local A/B boot (`fit_bootcmd` -> `boot.scr`). No network access. |
 
 For testing on a network whose DHCP server does not point next-server at the TFTP/NFS server, set
