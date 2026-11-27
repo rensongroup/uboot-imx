@@ -67,3 +67,16 @@ The supplier writes `boot_mode=factory`; Renson manufacturing runs
 `fw_setenv boot_mode emmc` after provisioning. Networking (DHCP/TFTP, EQOS,
 TI DP83825 PHY via `CONFIG_PHY_TI_GENERIC`) is enabled in the defconfig and in
 the Yocto `production_boot.cfg` fragment.
+
+### Environment loading
+
+The env is stored once in eMMC at `0x700000`, size `0x4000` (CRC32 + data).
+With `CONFIG_ENV_WRITEABLE_LIST=y`, `env_load()` first loads the full built-in
+default env and then imports the stored env; variables not on
+`CFG_ENV_FLAGS_LIST_STATIC` are ignored. Boot scripts always come from the
+binary; the stored env only provides listed variables (`boot_mode`,
+`mfg_family`, `mfg_server_ip`, RAUC `BOOT_ORDER`/`BOOT_x_LEFT`, ...). A bad CRC
+(blank or erased env, e.g. during the supplier USB boot) means defaults only,
+i.e. the eMMC boot path. The supplier writes the factory env
+(`boot_mode=factory`, `mfg_family=flux`) as its last step; manufacturing changes
+only `boot_mode` with `fw_setenv`, so RAUC's state is kept.
